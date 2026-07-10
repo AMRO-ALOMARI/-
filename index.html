@@ -1,0 +1,784 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#05080c">
+<title>رادع — يعرّفك مين يتصل فيك</title>
+<meta name="description" content="رادع يعرض اسم الجهة الرسمية الموثّقة لحظة اتصالها بك، ويحذّرك من الأرقام المجهولة — حماية من الاحتيال الهاتفي.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#05080c; --bg2:#070d13;
+    --panel:rgba(16,26,34,.55); --panel2:rgba(20,32,42,.72);
+    --line:rgba(122,160,182,.14); --line2:rgba(122,160,182,.26);
+    --txt:#f2f7fa; --sub:#9db2bd; --dim:#5d7280;
+    --brand:#14e8a2; --brand2:#0aa876; --brand-deep:#065a41;
+    --glow:rgba(20,232,162,.32);
+    --red:#ff5d59; --amber:#f6b83c; --blue:#57a6ff;
+    --mono:'JetBrains Mono',monospace;
+    --r-lg:24px; --r-md:18px; --r-sm:12px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:auto}
+  html.lenis,html.lenis body{height:auto}
+  .lenis.lenis-smooth{scroll-behavior:auto!important}
+  body{background:var(--bg);color:var(--txt);font-family:'Tajawal','Segoe UI',Tahoma,sans-serif;line-height:1.8;overflow-x:hidden;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  ::selection{background:var(--brand);color:#032018}
+  a:focus-visible,button:focus-visible{outline:2px solid var(--brand);outline-offset:3px;border-radius:6px}
+
+  /* خلفيات وطبقات */
+  #bg3d{position:fixed;inset:0;width:100vw;height:100vh;z-index:0}
+  .vignette{position:fixed;inset:0;z-index:1;pointer-events:none;
+    background:radial-gradient(ellipse at 50% 24%,transparent 34%,rgba(5,8,12,.72) 100%)}
+  .grain{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.05;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.6'/%3E%3C/svg%3E")}
+  main{position:relative;z-index:2}
+  section{max-width:1120px;margin:0 auto;padding:110px 24px}
+
+  /* شريط التقدم */
+  #progress{position:fixed;top:0;right:0;height:2.5px;width:0;z-index:40;
+    background:linear-gradient(90deg,var(--brand),#7ef7cd);box-shadow:0 0 12px var(--glow)}
+
+  /* التنقل */
+  nav{position:fixed;top:0;right:0;left:0;z-index:30;display:flex;align-items:center;justify-content:space-between;
+    padding:16px 30px;transition:background .35s,border-color .35s,padding .35s;border-bottom:1px solid transparent}
+  nav.solid{background:rgba(5,8,12,.72);backdrop-filter:blur(20px) saturate(1.4);border-color:var(--line);padding:11px 30px}
+  .navbrand{display:flex;align-items:center;gap:12px;font-weight:900;font-size:20px;letter-spacing:-.3px}
+  .navlogo{width:40px;height:40px;filter:drop-shadow(0 0 16px var(--glow))}
+  .logo-svg{display:block;width:100%;height:100%}
+  .logo-ring{transform-origin:center;animation:logospin 10s linear infinite}
+  .logo-pulse{transform-origin:center;animation:logopulse 2.6s ease-in-out infinite}
+  @keyframes logospin{to{transform:rotate(360deg)}}
+  @keyframes logopulse{0%,100%{opacity:.22;transform:scale(1)}50%{opacity:.65;transform:scale(1.1)}}
+  .navlinks{display:flex;gap:4px;align-items:center}
+  .navlinks a{color:var(--sub);text-decoration:none;font-size:14.5px;font-weight:500;padding:9px 15px;border-radius:11px;transition:.22s}
+  .navlinks a:hover{color:var(--txt);background:rgba(255,255,255,.05)}
+  .navlinks a.cta{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#042219;font-weight:800;
+    box-shadow:0 4px 22px var(--glow), inset 0 1px 0 rgba(255,255,255,.28)}
+  .navlinks a.cta:hover{transform:translateY(-1px);box-shadow:0 8px 30px var(--glow), inset 0 1px 0 rgba(255,255,255,.28)}
+  @media(max-width:760px){.navlinks a:not(.cta){display:none}}
+
+  /* عناوين عامة */
+  .kicker{display:inline-flex;align-items:center;gap:9px;font-family:var(--mono);font-size:12px;letter-spacing:2.5px;
+    color:var(--brand);padding:7px 15px;border:1px solid rgba(20,232,162,.28);border-radius:30px;
+    background:rgba(20,232,162,.06);margin-bottom:22px}
+  .kicker::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--brand);box-shadow:0 0 10px var(--brand);animation:kdot 2s infinite}
+  @keyframes kdot{0%,100%{opacity:1}50%{opacity:.3}}
+  h2.title{font-size:clamp(30px,5.2vw,52px);font-weight:900;line-height:1.22;margin-bottom:18px;letter-spacing:-1px}
+  .sub{font-size:clamp(15.5px,2.2vw,18.5px);color:var(--sub);max-width:660px;font-weight:400}
+
+  /* البطل */
+  .hero{min-height:100svh;display:flex;flex-direction:column;justify-content:center;padding-top:90px;position:relative}
+  .hero h1{font-size:clamp(52px,11vw,124px);font-weight:900;line-height:.96;letter-spacing:-3px;margin-bottom:18px}
+  .hero h1 .g{background:linear-gradient(115deg,var(--brand) 10%,#8bf7d2 45%,var(--brand) 80%);background-size:220% 100%;
+    -webkit-background-clip:text;background-clip:text;color:transparent;animation:sheen 6s ease-in-out infinite;
+    filter:drop-shadow(0 0 34px rgba(20,232,162,.25))}
+  @keyframes sheen{0%,100%{background-position:0% 0}50%{background-position:100% 0}}
+  .hero .lead{font-size:clamp(19px,3vw,27px);color:#cfdde4;max-width:620px;margin-bottom:14px;font-weight:500;line-height:1.55}
+  .hero .lead b{color:var(--brand);font-weight:800}
+  .hero .note{color:var(--sub);font-size:15.5px;max-width:540px;margin-bottom:38px}
+  .btns{display:flex;gap:14px;flex-wrap:wrap}
+  .btn{padding:16px 30px;border-radius:16px;font-weight:800;font-size:16.5px;text-decoration:none;cursor:pointer;
+    transition:transform .22s,box-shadow .22s,border-color .22s,background .22s;border:1px solid transparent;display:inline-flex;align-items:center;gap:10px;font-family:inherit}
+  .btn.p{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#042219;
+    box-shadow:0 10px 36px var(--glow), inset 0 1px 0 rgba(255,255,255,.3)}
+  .btn.p:hover{transform:translateY(-3px);box-shadow:0 16px 48px var(--glow), inset 0 1px 0 rgba(255,255,255,.3)}
+  .btn.s{background:rgba(255,255,255,.035);border-color:var(--line2);color:var(--txt);backdrop-filter:blur(8px)}
+  .btn.s:hover{border-color:var(--brand);background:rgba(20,232,162,.07);transform:translateY(-3px)}
+  .herochips{display:flex;gap:10px;flex-wrap:wrap;margin-top:42px}
+  .hchip{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--sub);
+    padding:8px 15px;border:1px solid var(--line);border-radius:30px;background:rgba(12,20,27,.5);backdrop-filter:blur(8px)}
+  .hchip b{color:var(--brand);font-weight:700}
+  .scrollhint{position:absolute;bottom:26px;left:50%;transform:translateX(-50%);color:var(--dim);font-size:11.5px;font-family:var(--mono);letter-spacing:2px;display:flex;flex-direction:column;align-items:center;gap:9px}
+  .mouse{width:22px;height:34px;border:1.5px solid var(--dim);border-radius:12px;position:relative}
+  .mouse::after{content:"";position:absolute;top:6px;left:50%;transform:translateX(-50%);width:3px;height:6px;background:var(--brand);border-radius:2px;animation:scr 1.7s infinite}
+  @keyframes scr{0%{opacity:0;top:6px}40%{opacity:1}100%{opacity:0;top:17px}}
+
+  /* شريط الجهات المتحرك */
+  .marquee{border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:20px 0;overflow:hidden;
+    background:rgba(8,13,19,.55);backdrop-filter:blur(10px);position:relative;z-index:2;
+    -webkit-mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent);
+    mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent)}
+  .mtrack{display:flex;gap:52px;width:max-content;animation:mq 34s linear infinite}
+  .marquee:hover .mtrack{animation-play-state:paused}
+  @keyframes mq{to{transform:translateX(50%)}}
+  .mitem{display:flex;align-items:center;gap:10px;white-space:nowrap;color:var(--sub);font-size:15px;font-weight:500}
+  .mitem .mk{color:var(--brand);font-weight:800}
+  .mitem .mn{font-family:var(--mono);font-size:12.5px;color:var(--dim);direction:ltr}
+
+  /* الظهور */
+  .reveal{opacity:0;transform:translateY(38px);filter:blur(5px);
+    transition:opacity .9s ease,transform .9s cubic-bezier(.16,.8,.26,1),filter .9s ease}
+  .reveal.in{opacity:1;transform:none;filter:none}
+  .reveal.d1{transition-delay:.08s}.reveal.d2{transition-delay:.16s}.reveal.d3{transition-delay:.24s}
+
+  /* البطاقات (زجاج + إمالة) */
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg);
+    backdrop-filter:blur(18px) saturate(1.3);position:relative;overflow:hidden;
+    transition:transform .18s ease,border-color .3s,box-shadow .3s;transform-style:preserve-3d;will-change:transform}
+  .card::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+    background:linear-gradient(160deg,rgba(255,255,255,.055),transparent 38%)}
+  .card:hover{border-color:rgba(20,232,162,.4);box-shadow:0 24px 60px rgba(0,0,0,.45),0 0 0 1px rgba(20,232,162,.12)}
+
+  /* الإحصائيات */
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:18px;margin-top:44px}
+  .stat{padding:30px 28px}
+  .stat .num{font-size:42px;font-weight:900;line-height:1.15;
+    background:linear-gradient(120deg,var(--brand),#8bf7d2);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .stat .lbl{color:var(--sub);font-size:15px;margin-top:10px}
+  .stat .src{color:var(--dim);font-size:11.5px;margin-top:16px;padding-top:12px;border-top:1px solid var(--line)}
+
+  /* الخطوات */
+  .flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;margin-top:46px}
+  .step{padding:32px 28px}
+  .step .no{font-family:var(--mono);font-size:12.5px;color:var(--brand);font-weight:700;letter-spacing:2px;margin-bottom:18px;display:flex;align-items:center;gap:10px}
+  .step .no::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(20,232,162,.4),transparent)}
+  .step .ic{width:52px;height:52px;border-radius:15px;display:grid;place-items:center;font-size:25px;margin-bottom:18px;
+    background:rgba(20,232,162,.09);border:1px solid rgba(20,232,162,.22)}
+  .step h3{font-size:19.5px;font-weight:800;margin-bottom:9px}
+  .step p{color:var(--sub);font-size:14.5px}
+
+  /* موك الجوال DOM */
+  .split{display:grid;grid-template-columns:1.05fr .95fr;gap:52px;align-items:center;margin-top:96px}
+  @media(max-width:840px){.split{grid-template-columns:1fr;gap:40px}}
+  .phone{width:280px;height:560px;margin:0 auto;border-radius:46px;background:linear-gradient(165deg,#0e1922,#060b10);
+    border:1px solid rgba(130,165,185,.22);position:relative;overflow:hidden;
+    box-shadow:0 40px 100px rgba(0,0,0,.65),0 0 80px rgba(20,232,162,.08),inset 0 0 0 7px #04070b}
+  .phone .notch{position:absolute;top:15px;left:50%;transform:translateX(-50%);width:112px;height:27px;background:#04070b;border-radius:15px;z-index:3}
+  .phone .screen{position:absolute;inset:13px;border-radius:36px;background:radial-gradient(circle at 50% 18%,#0d2b22,#050b10 72%);display:flex;flex-direction:column;align-items:center;padding-top:92px}
+  .callava{width:106px;height:106px;border-radius:50%;background:linear-gradient(135deg,var(--brand),var(--brand2));display:grid;place-items:center;font-size:46px;box-shadow:0 0 54px var(--glow);animation:pulse 2.2s infinite}
+  @keyframes pulse{0%,100%{box-shadow:0 0 42px var(--glow)}50%{box-shadow:0 0 76px var(--glow)}}
+  .verifiedtag{margin-top:17px;background:rgba(20,232,162,.13);border:1px solid var(--brand);color:var(--brand);
+    font-size:12.5px;font-weight:700;padding:6px 15px;border-radius:22px;display:flex;align-items:center;gap:6px}
+  .callname{margin-top:15px;font-size:22px;font-weight:800}
+  .callnum{color:var(--sub);font-family:var(--mono);font-size:14px;margin-top:4px;direction:ltr}
+  .callsub{color:var(--dim);font-size:12.5px;margin-top:4px}
+  .callbtns{position:absolute;bottom:46px;left:0;right:0;display:flex;justify-content:space-around;padding:0 42px}
+  .cbtn{width:62px;height:62px;border-radius:50%;display:grid;place-items:center;font-size:26px;color:#fff}
+  .cbtn.dec{background:var(--red);box-shadow:0 8px 26px rgba(255,93,89,.4)}
+  .cbtn.acc{background:var(--brand);color:#042219;box-shadow:0 8px 26px var(--glow)}
+
+  /* الجهات */
+  .ents{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:15px;margin-top:44px}
+  .ent{padding:21px}
+  .ent .top{display:flex;align-items:center;gap:12px;margin-bottom:13px}
+  .ent .badge{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;font-size:21px;flex-shrink:0}
+  .ent .nm{font-weight:800;font-size:15.5px;line-height:1.35}
+  .ent .cat{font-size:12px;color:var(--dim)}
+  .ent .num{font-family:var(--mono);color:var(--brand);font-size:15.5px;letter-spacing:.5px;direction:ltr;text-align:right}
+  .ent .chk{margin-right:auto;color:var(--brand);font-size:17px}
+  .cat-gov{background:rgba(87,166,255,.13);color:var(--blue)}
+  .cat-bank{background:rgba(20,232,162,.13);color:var(--brand)}
+  .cat-emr{background:rgba(255,93,89,.13);color:var(--red)}
+
+  /* الأمان */
+  .hashbox{background:rgba(4,7,11,.82);border:1px solid var(--line);border-radius:var(--r-md);padding:26px;font-family:var(--mono);
+    font-size:12.5px;direction:ltr;text-align:left;color:#9ec9e0;margin-top:34px;overflow-x:auto;backdrop-filter:blur(12px)}
+  .hashbox .blk{padding:11px 0;border-bottom:1px dashed rgba(122,160,182,.14)}
+  .hashbox .blk:last-child{border:none}
+  .hashbox .s{color:var(--brand)}.hashbox .m{color:var(--dim)}.hashbox .r{color:var(--red)}
+  .hashbox .arrow{color:var(--dim);padding:0 7px}
+
+  /* الطبقات */
+  .layers{display:flex;flex-direction:column;gap:15px;margin-top:44px}
+  .layer{display:flex;align-items:center;gap:24px;padding:26px 30px}
+  .layer .lnum{font-family:var(--mono);font-size:32px;font-weight:900;opacity:.35;min-width:52px;
+    background:linear-gradient(120deg,var(--txt),transparent);-webkit-background-clip:text;background-clip:text;color:transparent;opacity:.5}
+  .layer .lbody h3{font-size:18.5px;font-weight:800;margin-bottom:5px;display:flex;align-items:center;gap:11px;flex-wrap:wrap}
+  .layer .lbody p{color:var(--sub);font-size:14.5px}
+  .pill{font-size:11.5px;font-family:var(--mono);padding:4px 12px;border-radius:22px;font-weight:600}
+  .pill.now{background:rgba(20,232,162,.14);color:var(--brand);border:1px solid rgba(20,232,162,.3)}
+  .pill.soon{background:rgba(246,184,60,.12);color:var(--amber);border:1px solid rgba(246,184,60,.28)}
+  .pill.plan{background:rgba(87,166,255,.12);color:var(--blue);border:1px solid rgba(87,166,255,.28)}
+  .layer.ln{border-right:3px solid var(--brand)}
+  .layer.ls{border-right:3px solid var(--amber)}
+  .layer.lp{border-right:3px solid var(--blue)}
+
+  /* الختام */
+  .final{text-align:center;padding:76px 34px;margin:20px auto;
+    background:linear-gradient(165deg,rgba(20,232,162,.09),rgba(8,13,19,.6));
+    border:1px solid rgba(20,232,162,.2);border-radius:32px;backdrop-filter:blur(18px);position:relative;overflow:hidden}
+  .final::before{content:"";position:absolute;top:-40%;left:50%;transform:translateX(-50%);width:70%;height:60%;
+    background:radial-gradient(ellipse,rgba(20,232,162,.16),transparent 70%);pointer-events:none}
+  .final h2{font-size:clamp(30px,5.4vw,52px);font-weight:900;margin-bottom:16px;letter-spacing:-1px}
+  .final p{color:var(--sub);max-width:540px;margin:0 auto 34px;font-size:16.5px}
+
+  footer{border-top:1px solid var(--line);padding:48px 24px;text-align:center;color:var(--dim);font-size:13.5px;position:relative;z-index:2;background:rgba(5,8,12,.6);backdrop-filter:blur(10px)}
+  footer .fl{color:var(--txt);font-weight:900;font-size:17px;margin:10px 0 6px}
+  footer a{color:var(--sub);text-decoration:none;transition:.2s}footer a:hover{color:var(--brand)}
+</style>
+</head>
+<body>
+<canvas id="bg3d"></canvas>
+<div class="vignette"></div>
+<div class="grain"></div>
+<div id="progress"></div>
+
+<nav id="nav">
+  <div class="navbrand">
+    <div class="navlogo">
+      <svg class="logo-svg" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs><linearGradient id="lgNav" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#2ef0b0"/><stop offset="1" stop-color="#0a8f66"/></linearGradient></defs>
+        <circle class="logo-pulse" cx="24" cy="24" r="21.5" stroke="#14e8a2" stroke-width="1" opacity=".3"/>
+        <circle class="logo-ring" cx="24" cy="24" r="18.5" stroke="#14e8a2" stroke-width="1" stroke-dasharray="2 7" opacity=".55"/>
+        <path d="M24 5 L38 10.5 V23 C38 32 32 38.5 24 41.5 C16 38.5 10 32 10 23 V10.5 Z" fill="url(#lgNav)"/>
+        <text x="23" y="31" text-anchor="middle" font-family="Tajawal,sans-serif" font-size="23" font-weight="900" fill="#04140d">ر</text>
+        <circle cx="33.5" cy="32" r="6.6" fill="#04140d"/>
+        <path d="M30.4 32 l2 2 l4 -4.6" stroke="#2ef0b0" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      </svg>
+    </div>رادع</div>
+  <div class="navlinks">
+    <a href="#problem">المشكلة</a>
+    <a href="#how">كيف يشتغل</a>
+    <a href="#entities">الجهات</a>
+    <a href="#security">الأمان</a>
+    <a href="#how" class="cta">شاهد القصة</a>
+  </div>
+</nav>
+
+<main>
+  <!-- البطل -->
+  <section class="hero">
+    <div><span class="kicker">حماية من الاحتيال الهاتفي</span></div>
+    <h1>مين يتصل<br><span class="g">فيك؟</span></h1>
+    <p class="lead">رادع يعرض لك <b>اسم الجهة الرسمية</b> لحظة اتصالها، ويحذّرك من الأرقام المجهولة.</p>
+    <p class="note">كل يوم ينتحل محتالون أرقام البنوك والجهات الحكومية عشان يخدعونك. رادع يوقف هذا — يقارن الرقم بقاعدة أرقام رسمية حقيقية، ويعطيك الجواب قبل ما ترد.</p>
+    <div class="btns">
+      <a href="#how" class="btn p">شوف كيف يشتغل ↓</a>
+      <a href="#entities" class="btn s">الجهات الموثّقة</a>
+    </div>
+    <div class="herochips">
+      <span class="hchip"><b>+150</b> جهة موثّقة</span>
+      <span class="hchip">يعمل <b>بدون إنترنت</b></span>
+      <span class="hchip">فحص في <b>أقل من ثانية</b></span>
+      <span class="hchip">سجل <b>غير قابل للتلاعب</b></span>
+    </div>
+    <div class="scrollhint"><div class="mouse"></div>مرّر للأسفل</div>
+  </section>
+
+  <!-- شريط الجهات -->
+  <div class="marquee" aria-hidden="true">
+    <div class="mtrack" id="mtrack"></div>
+  </div>
+
+  <!-- المشكلة -->
+  <section id="problem">
+    <div class="reveal"><span class="kicker">المشكلة</span></div>
+    <h2 class="title reveal">الرقم المجهول = فرصة للمحتال</h2>
+    <p class="sub reveal">لما يجيك اتصال من رقم ما تعرفه، ما عندك طريقة تتأكد إذا كان بنكك فعلاً أو محتال ينتحل اسمه. هذا الشك بالضبط هو اللي يستغلّه المحتالون.</p>
+    <div class="stats">
+      <div class="stat card tilt reveal d1"><div class="num"><span data-count="1">0</span> تريليون $</div><div class="lbl">خسائر الاحتيال حول العالم خلال ١٢ شهراً</div><div class="src">المصدر: Global State of Scams Report 2024 — GASA &amp; Feedzai</div></div>
+      <div class="stat card tilt reveal d2"><div class="num">٢٠٢٣</div><div class="lbl">بدأت هيئة الاتصالات عرض اسم المتصل لمواجهة انتحال الأرقام (RI054)</div><div class="src">المصدر: هيئة الاتصالات والفضاء والتقنية (CST)</div></div>
+      <div class="stat card tilt reveal d3"><div class="num"><span data-count="150">0</span>+</div><div class="lbl">جهة رسمية موثّقة في قاعدة رادع اليوم</div><div class="src">المصدر: قاعدة بيانات رادع — من مواقع الجهات الرسمية</div></div>
+    </div>
+  </section>
+
+  <!-- كيف يشتغل -->
+  <section id="how">
+    <div class="reveal"><span class="kicker">كيف يشتغل</span></div>
+    <h2 class="title reveal">أربع خطوات، تصير قبل ما ترد</h2>
+    <p class="sub reveal">رادع يفحص كل مكالمة واردة في أقل من جزء من الثانية، ويعطيك النتيجة على الشاشة مباشرة.</p>
+    <div class="flow">
+      <div class="step card tilt reveal d1"><div class="no">01</div><div class="ic">📇</div><h3>قاعدة أرقام حقيقية</h3><p>جمعنا أرقام أكثر من ١٥٠ جهة رسمية من مصادرها المباشرة — بنوك، وزارات، وطوارئ.</p></div>
+      <div class="step card tilt reveal d2"><div class="no">02</div><div class="ic">📞</div><h3>يفحص لحظة الاتصال</h3><p>عند رنين الهاتف، رادع يقارن الرقم بالقاعدة فوراً وبدون إنترنت.</p></div>
+      <div class="step card tilt reveal d3"><div class="no">03</div><div class="ic">✅</div><h3>يعرض الاسم الموثّق</h3><p>إذا الرقم رسمي، يظهر اسم الجهة وعلامة موثّق فوق شاشة الاتصال.</p></div>
+      <div class="step card tilt reveal d1"><div class="no">04</div><div class="ic">⚠️</div><h3>يحذّرك من المجهول</h3><p>إذا الرقم غير مسجّل وينتحل جهة معروفة، يطلع لك تنبيه احتيال محتمل.</p></div>
+    </div>
+
+    <div class="split">
+      <div>
+        <h2 class="title reveal" style="font-size:clamp(24px,4vw,36px)">هكذا تشوفها على جوالك</h2>
+        <p class="sub reveal">بدل رقم غامض، تشوف اسم الجهة بوضوح مع علامة التوثيق — فتعرف إنها مكالمة حقيقية وترد بثقة. وإذا كان محتال، ما راح يقدر ينتحل الاسم لأنه غير مسجّل.</p>
+      </div>
+      <div class="reveal d1">
+        <div class="phone">
+          <div class="notch"></div>
+          <div class="screen">
+            <div class="callava">🏛️</div>
+            <div class="verifiedtag">✓ جهة موثّقة</div>
+            <div class="callname">أبشر — وزارة الداخلية</div>
+            <div class="callnum">920020405</div>
+            <div class="callsub">مكالمة واردة…</div>
+            <div class="callbtns"><div class="cbtn dec">✕</div><div class="cbtn acc">✓</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- الجهات -->
+  <section id="entities">
+    <div class="reveal"><span class="kicker">الجهات الموثّقة</span></div>
+    <h2 class="title reveal">أرقام حقيقية من مصادرها الرسمية</h2>
+    <p class="sub reveal">كل رقم في رادع مأخوذ من الموقع الرسمي للجهة نفسها — ما اخترعنا رقماً واحداً. هذه عيّنة:</p>
+    <div class="ents">
+      <div class="ent card tilt reveal d1"><div class="top"><div class="badge cat-gov">🏛️</div><div><div class="nm">أبشر — وزارة الداخلية</div><div class="cat">جهة حكومية</div></div><div class="chk">✓</div></div><div class="num">920020405</div></div>
+      <div class="ent card tilt reveal d1"><div class="top"><div class="badge cat-gov">🚗</div><div><div class="nm">المرور</div><div class="cat">جهة حكومية</div></div><div class="chk">✓</div></div><div class="num">920000090</div></div>
+      <div class="ent card tilt reveal d2"><div class="top"><div class="badge cat-bank">🏦</div><div><div class="nm">بنك الإنماء</div><div class="cat">خدمة عملاء</div></div><div class="chk">✓</div></div><div class="num">920028000</div></div>
+      <div class="ent card tilt reveal d2"><div class="top"><div class="badge cat-bank">🛡️</div><div><div class="nm">مصرف الراجحي</div><div class="cat">بلاغات الاحتيال</div></div><div class="chk">✓</div></div><div class="num">8001244455</div></div>
+      <div class="ent card tilt reveal d3"><div class="top"><div class="badge cat-gov">🔐</div><div><div class="nm">نفاذ</div><div class="cat">SDAIA</div></div><div class="chk">✓</div></div><div class="num">920002005</div></div>
+      <div class="ent card tilt reveal d3"><div class="top"><div class="badge cat-gov">⚖️</div><div><div class="nm">ناجز — وزارة العدل</div><div class="cat">جهة حكومية</div></div><div class="chk">✓</div></div><div class="num">920000177</div></div>
+      <div class="ent card tilt reveal d1"><div class="top"><div class="badge cat-emr">🚓</div><div><div class="nm">شرطة الطوارئ</div><div class="cat">طوارئ</div></div><div class="chk">✓</div></div><div class="num">999</div></div>
+      <div class="ent card tilt reveal d2"><div class="top"><div class="badge cat-emr">🚑</div><div><div class="nm">الهلال الأحمر</div><div class="cat">طوارئ</div></div><div class="chk">✓</div></div><div class="num">997</div></div>
+    </div>
+  </section>
+
+  <!-- الأمان -->
+  <section id="security">
+    <div class="reveal"><span class="kicker">الأمان</span></div>
+    <h2 class="title reveal">سجل لا يمكن التلاعب فيه</h2>
+    <p class="sub reveal">كل إضافة أو تعديل على أرقام الجهات تُسجّل في سلسلة مترابطة، كل حلقة فيها تحمل بصمة (Hash) الحلقة السابقة. لو حاول أحد يغيّر رقماً بأثر رجعي، تنكسر السلسلة ويُكشف فوراً — نفس الفكرة اللي تعمل بها البلوكشين، لكن بشكل بسيط وسريع داخل الجهاز.</p>
+    <div class="hashbox card reveal d1">
+      <div class="blk"><span class="m">block #0</span> · SIGN "أبشر 920020405" <span class="arrow">→</span> hash <span class="s">dcd1bd6e…a4f1</span></div>
+      <div class="blk"><span class="m">block #1</span> · prev <span class="s">dcd1bd6e…a4f1</span> <span class="arrow">→</span> hash <span class="s">87910f83…c2b0</span></div>
+      <div class="blk"><span class="m">block #2</span> · prev <span class="s">87910f83…c2b0</span> <span class="arrow">→</span> hash <span class="s">1f4a09d2…7e55</span></div>
+      <div class="blk"><span class="r">✗ لو غُيّر محتوى block #1 → البصمة ما تطابق → السلسلة تنكسر عند هذه النقطة</span></div>
+    </div>
+    <p class="sub reveal d2" style="margin-top:26px">والتوثيق يذهب أبعد: كل مكالمة رسمية تُوقّع توقيعاً رقمياً بمعيار <b style="color:var(--brand)">ES256 / STIR‑SHAKEN</b> — نفس المعيار العالمي لمصادقة المكالمات، مبني داخل نظام رادع.</p>
+  </section>
+
+  <!-- الطبقات -->
+  <section id="layers">
+    <div class="reveal"><span class="kicker">كيف يوصلك الاسم</span></div>
+    <h2 class="title reveal">ثلاث طبقات، من اليوم إلى المستقبل</h2>
+    <p class="sub reveal">رادع يشتغل الآن، ومصمَّم ليتوسّع بدون تطبيق مع الوقت. نكون صريحين: هذي الطبقة تعمل اليوم، وهذي قادمة.</p>
+    <div class="layers">
+      <div class="layer card ln reveal d1"><div class="lnum">01</div><div class="lbody"><h3>تطبيق رادع <span class="pill now">يعمل الآن</span></h3><p>يعرض الاسم فوق شاشة الاتصال على أي جوال أندرويد — بدون انتظار موافقة أحد. هذا اللي نعرضه اليوم.</p></div></div>
+      <div class="layer card ls reveal d2"><div class="lnum">02</div><div class="lbody"><h3>عبر Google و Apple <span class="pill soon">قيد التوثيق</span></h3><p>تسجيل الجهات في برامج المكالمات الموثّقة لدى جوجل وأبل، فيظهر الاسم بدون أي تطبيق على الطرفين.</p></div></div>
+      <div class="layer card lp reveal d3"><div class="lnum">03</div><div class="lbody"><h3>عبر شبكة المشغّل — RI054 <span class="pill plan">الخطوة القادمة</span></h3><p>الربط مع STC و Mobily و Zain وفق مواصفة الاتصالات السعودية، ليظهر الاسم على أي جهاز مباشرة من الشبكة.</p></div></div>
+    </div>
+  </section>
+
+  <!-- الختام -->
+  <section>
+    <div class="final reveal">
+      <h2>خلّ كل مكالمة مجهولة<br>تتحوّل لاسم واضح</h2>
+      <p>رادع يشتغل اليوم على أندرويد، وقاعدته تكبر كل يوم. المكالمة الجاية اللي توصلك من بنكك — بتعرف إنها فعلاً بنكك.</p>
+      <div class="btns" style="justify-content:center">
+        <a href="#how" class="btn p">شاهد القصة من البداية ↑</a>
+        <a href="#entities" class="btn s">تصفّح الجهات الموثّقة</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div style="width:52px;height:52px;margin:0 auto;filter:drop-shadow(0 0 16px var(--glow))">
+    <svg class="logo-svg" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs><linearGradient id="lgFoot" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#2ef0b0"/><stop offset="1" stop-color="#0a8f66"/></linearGradient></defs>
+      <circle class="logo-pulse" cx="24" cy="24" r="21.5" stroke="#14e8a2" stroke-width="1" opacity=".3"/>
+      <path d="M24 5 L38 10.5 V23 C38 32 32 38.5 24 41.5 C16 38.5 10 32 10 23 V10.5 Z" fill="url(#lgFoot)"/>
+      <text x="23" y="31" text-anchor="middle" font-family="Tajawal,sans-serif" font-size="23" font-weight="900" fill="#04140d">ر</text>
+      <circle cx="33.5" cy="32" r="6.6" fill="#04140d"/>
+      <path d="M30.4 32 l2 2 l4 -4.6" stroke="#2ef0b0" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    </svg>
+  </div>
+  <div class="fl">رادع</div>
+  <div>مشروع لحمايتك من الاحتيال الهاتفي · هاكاثون أمد بالشراكة مع أكاديمية طويق وبنك الإنماء</div>
+  <div style="margin-top:8px"><a href="https://allsitey.com">allsitey.com</a></div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.14/dist/lenis.min.js"></script>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+const MOBILE = innerWidth < 720;
+const XF = MOBILE ? 0.3 : Math.min(1, innerWidth/1000);
+
+const canvas = document.getElementById('bg3d');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio, MOBILE?1.6:2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x05080c, .028);
+const camera = new THREE.PerspectiveCamera(55, innerWidth/innerHeight, .1, 100);
+camera.position.set(0,0,6.8);
+
+// بيئة انعكاسات واقعية للمعادن
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), .06).texture;
+
+scene.add(new THREE.AmbientLight(0x7fa8b8, .5));
+const sun = new THREE.DirectionalLight(0xffffff, 1.1); sun.position.set(4,6,7); scene.add(sun);
+const greenLight = new THREE.PointLight(0x14e8a2, 2.4, 12); scene.add(greenLight);
+
+/* ================= معالجة لاحقة: بلوم سينمائي ================= */
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth,innerHeight), MOBILE? .35 : .55, .85, .22);
+composer.addPass(bloom);
+composer.addPass(new OutputPass());
+
+/* ================= الجوال ================= */
+const rig = new THREE.Group(); scene.add(rig);
+const phone = new THREE.Group(); rig.add(phone);
+
+const body = new THREE.Mesh(
+  new RoundedBoxGeometry(1.72, 3.55, .17, 5, .15),
+  new THREE.MeshPhysicalMaterial({color:0x0e1a24, metalness:.85, roughness:.28, clearcoat:1, clearcoatRoughness:.2, envMapIntensity:1.2}));
+phone.add(body);
+
+const halo = new THREE.Mesh(
+  new RoundedBoxGeometry(1.72, 3.55, .17, 5, .15),
+  new THREE.MeshBasicMaterial({color:0x14e8a2, side:THREE.BackSide, transparent:true, opacity:.42, depthWrite:false}));
+halo.scale.setScalar(1.033);
+phone.add(halo);
+
+for(const [y,h] of [[.9,.42],[.28,.28]]){
+  const btn = new THREE.Mesh(new THREE.BoxGeometry(.035,h,.06),
+    new THREE.MeshStandardMaterial({color:0x24384a, metalness:.9, roughness:.35}));
+  btn.position.set(-.885, y, 0); phone.add(btn);
+}
+
+/* ---- الشاشة الحيّة ---- */
+const sc = document.createElement('canvas'); sc.width = 512; sc.height = 1024;
+const sctx = sc.getContext('2d');
+const screenTex = new THREE.CanvasTexture(sc);
+screenTex.colorSpace = THREE.SRGBColorSpace; screenTex.anisotropy = 4;
+const screen = new THREE.Mesh(
+  new THREE.PlaneGeometry(1.56, 3.36),
+  new THREE.MeshBasicMaterial({map:screenTex, toneMapped:false}));
+screen.position.z = .095; phone.add(screen);
+
+let scrState = 'idle', scrUntil = 0;
+function setScreen(state, ms){ scrState = state; scrUntil = performance.now() + ms; }
+function rr(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
+
+function drawScreen(t){
+  const W=512, H=1024, c=sctx;
+  c.textBaseline='middle'; c.textAlign='center';
+  const g=c.createLinearGradient(0,0,0,H);
+  if(scrState==='blocked'){ g.addColorStop(0,'#1c0b0e'); g.addColorStop(1,'#0b0709'); }
+  else if(scrState==='incoming'){ g.addColorStop(0,'#07231b'); g.addColorStop(1,'#060d12'); }
+  else { g.addColorStop(0,'#0a141c'); g.addColorStop(1,'#070d12'); }
+  c.fillStyle=g; c.fillRect(0,0,W,H);
+  c.fillStyle='rgba(255,255,255,.55)'; c.font='600 22px Tajawal';
+  c.textAlign='left';  c.fillText('9:41', 30, 42);
+  c.textAlign='right'; c.fillText('رادع ✓', W-30, 42);
+  c.fillStyle='#000'; c.beginPath(); c.arc(W/2, 40, 13, 0, 7); c.fill();
+  c.textAlign='center';
+  const pulse=(Math.sin(t*4)+1)/2;
+
+  if(scrState==='incoming'){
+    c.fillStyle='rgba(20,232,162,.9)'; c.font='500 30px Tajawal'; c.fillText('مكالمة واردة…', W/2, 140);
+    for(let i=0;i<3;i++){
+      c.strokeStyle=`rgba(20,232,162,${.38-.11*i})`; c.lineWidth=2;
+      c.beginPath(); c.arc(W/2, 330, 100+i*26+pulse*12, 0, 7); c.stroke();
+    }
+    const av=c.createLinearGradient(W/2-84,246,W/2+84,414);
+    av.addColorStop(0,'#2ef0b0'); av.addColorStop(1,'#0a8f66');
+    c.fillStyle=av; c.beginPath(); c.arc(W/2, 330, 84, 0, 7); c.fill();
+    c.font='80px Tajawal'; c.fillText('🏛️', W/2, 336);
+    c.fillStyle='rgba(20,232,162,.15)'; rr(c, W/2-125, 452, 250, 54, 27); c.fill();
+    c.strokeStyle='#14e8a2'; c.lineWidth=2; rr(c, W/2-125, 452, 250, 54, 27); c.stroke();
+    c.fillStyle='#14e8a2'; c.font='700 28px Tajawal'; c.fillText('✓ جهة موثّقة', W/2, 480);
+    c.fillStyle='#f2f7fa'; c.font='900 44px Tajawal'; c.fillText('أبشر — وزارة الداخلية', W/2, 570);
+    c.fillStyle='#9ff0d3'; c.font='600 36px Tajawal'; c.fillText('920020405', W/2, 628);
+    c.fillStyle='#ff5d59'; c.beginPath(); c.arc(W/2-110, 872, 56, 0, 7); c.fill();
+    c.fillStyle='#14e8a2'; c.beginPath(); c.arc(W/2+110, 872, 56, 0, 7); c.fill();
+    c.fillStyle='#fff';    c.font='900 44px Tajawal'; c.fillText('✕', W/2-110, 874);
+    c.fillStyle='#04140d'; c.fillText('✓', W/2+110, 874);
+  } else if(scrState==='blocked'){
+    for(let i=0;i<3;i++){
+      c.strokeStyle=`rgba(255,93,89,${.34-.1*i})`; c.lineWidth=2;
+      c.beginPath(); c.arc(W/2, 330, 100+i*26+pulse*12, 0, 7); c.stroke();
+    }
+    const av=c.createLinearGradient(W/2-84,246,W/2+84,414);
+    av.addColorStop(0,'#ff6b64'); av.addColorStop(1,'#8f2320');
+    c.fillStyle=av; c.beginPath(); c.arc(W/2, 330, 84, 0, 7); c.fill();
+    c.font='80px Tajawal'; c.fillText('⚠️', W/2, 336);
+    c.fillStyle='rgba(255,93,89,.14)'; rr(c, W/2-140, 452, 280, 54, 27); c.fill();
+    c.strokeStyle='#ff5d59'; c.lineWidth=2; rr(c, W/2-140, 452, 280, 54, 27); c.stroke();
+    c.fillStyle='#ff5d59'; c.font='700 28px Tajawal'; c.fillText('رقم غير موثّق', W/2, 480);
+    c.fillStyle='#ffd9d7'; c.font='900 44px Tajawal'; c.fillText('احتمال احتيال', W/2, 570);
+    c.fillStyle='#e3a5a2'; c.font='600 36px Tajawal'; c.fillText('0555 123 456', W/2, 628);
+    c.fillStyle='rgba(255,93,89,.9)'; rr(c, W/2-160, 830, 320, 76, 38); c.fill();
+    c.fillStyle='#fff'; c.font='800 30px Tajawal'; c.fillText('حظر الرقم', W/2, 869);
+  } else {
+    c.strokeStyle=`rgba(20,232,162,${.35+pulse*.3})`; c.lineWidth=3;
+    c.beginPath(); c.arc(W/2, 400, 108+pulse*8, 0, 7); c.stroke();
+    c.fillStyle='#0d2a20'; c.beginPath(); c.arc(W/2, 400, 92, 0, 7); c.fill();
+    c.fillStyle='#2ef0b0'; c.font='900 86px Tajawal'; c.fillText('ر', W/2, 404);
+    c.fillStyle='#f2f7fa'; c.font='900 46px Tajawal'; c.fillText('رادع يحميك', W/2, 580);
+    c.fillStyle='#9ff0d3'; c.font='600 30px Tajawal'; c.fillText('الحماية فعّالة الآن ✓', W/2, 640);
+    c.fillStyle='rgba(157,178,189,.8)'; c.font='500 24px Tajawal'; c.fillText('يفحص كل مكالمة واردة تلقائيًا', W/2, 830);
+  }
+  screenTex.needsUpdate = true;
+}
+document.fonts.ready.then(()=>drawScreen(0));
+
+/* ================= الدرع ================= */
+const shieldWire = new THREE.LineSegments(
+  new THREE.WireframeGeometry(new THREE.IcosahedronGeometry(2.6, 1)),
+  new THREE.LineBasicMaterial({color:0x14e8a2, transparent:true, opacity:.13}));
+rig.add(shieldWire);
+const shieldSkin = new THREE.Mesh(
+  new THREE.SphereGeometry(2.58, 32, 24),
+  new THREE.MeshBasicMaterial({color:0x14e8a2, transparent:true, opacity:.026, side:THREE.BackSide, depthWrite:false}));
+rig.add(shieldSkin);
+// حلقة مدارية أنيقة
+const orbit = new THREE.Mesh(
+  new THREE.TorusGeometry(3.0, .008, 8, 120),
+  new THREE.MeshBasicMaterial({color:0x14e8a2, transparent:true, opacity:.3}));
+orbit.rotation.x = Math.PI/2.4; rig.add(orbit);
+const orbitDot = new THREE.Mesh(new THREE.SphereGeometry(.05,10,10),
+  new THREE.MeshBasicMaterial({color:0x8bf7d2}));
+rig.add(orbitDot);
+
+let shieldFlash = 0;
+const GREEN = new THREE.Color(0x14e8a2), RED = new THREE.Color(0xff5d59);
+
+/* ---- هالة خلفية ---- */
+const gc = document.createElement('canvas'); gc.width = gc.height = 256;
+const gctx = gc.getContext('2d');
+const gg = gctx.createRadialGradient(128,128,0,128,128,128);
+gg.addColorStop(0,'rgba(255,255,255,.9)'); gg.addColorStop(.4,'rgba(255,255,255,.25)'); gg.addColorStop(1,'rgba(255,255,255,0)');
+gctx.fillStyle=gg; gctx.fillRect(0,0,256,256);
+const glowMat = new THREE.SpriteMaterial({map:new THREE.CanvasTexture(gc), color:0x14e8a2,
+  transparent:true, opacity:.3, blending:THREE.AdditiveBlending, depthWrite:false});
+const glow = new THREE.Sprite(glowMat); glow.scale.setScalar(8.5); glow.position.z = -.6;
+rig.add(glow);
+
+/* ================= الشبكة الخلفية ================= */
+const net = new THREE.Group(); scene.add(net);
+const N = MOBILE ? 450 : 1100, NETR = 8.5;
+const npos = new Float32Array(N*3);
+for(let i=0;i<N;i++){
+  const y = 1-(i/(N-1))*2, rad = Math.sqrt(1-y*y), th = Math.PI*(1+Math.sqrt(5))*i;
+  npos[i*3]=Math.cos(th)*rad*NETR; npos[i*3+1]=y*NETR; npos[i*3+2]=Math.sin(th)*rad*NETR;
+}
+const ng = new THREE.BufferGeometry(); ng.setAttribute('position', new THREE.BufferAttribute(npos,3));
+net.add(new THREE.Points(ng, new THREE.PointsMaterial({color:0x14e8a2, size:.03, transparent:true, opacity:.3})));
+
+const starN=320, sp=new Float32Array(starN*3);
+for(let i=0;i<starN;i++){ sp[i*3]=(Math.random()-.5)*46; sp[i*3+1]=(Math.random()-.5)*46; sp[i*3+2]=(Math.random()-.5)*24-8; }
+const sg=new THREE.BufferGeometry(); sg.setAttribute('position',new THREE.BufferAttribute(sp,3));
+scene.add(new THREE.Points(sg, new THREE.PointsMaterial({color:0x557788,size:.03,transparent:true,opacity:.45})));
+
+/* ================= المكالمات الطائرة ================= */
+const calls = [];
+const MAXC = MOBILE ? 4 : 7;
+function spawnCall(fraud){
+  const dir = new THREE.Vector3().randomDirection();
+  const start = dir.clone().multiplyScalar(NETR*.98);
+  const center = rig.position.clone();
+  const end = fraud
+    ? center.clone().add(dir.clone().setLength(2.62))
+    : center.clone().add(new THREE.Vector3(0,0,.5));
+  const mid = start.clone().lerp(end,.5).add(new THREE.Vector3().randomDirection().multiplyScalar(2.4));
+  const curve = new THREE.QuadraticBezierCurve3(start, mid, end);
+  const pts = curve.getPoints(64);
+  const geo = new THREE.BufferGeometry().setFromPoints(pts);
+  geo.setDrawRange(0,0);
+  const color = fraud ? 0xff5d59 : 0x14e8a2;
+  const line = new THREE.Line(geo, new THREE.LineBasicMaterial({color, transparent:true, opacity:.75}));
+  const head = new THREE.Mesh(new THREE.SphereGeometry(.07,10,10),
+    new THREE.MeshBasicMaterial({color, transparent:true, opacity:.95}));
+  scene.add(line, head);
+  calls.push({curve, line, head, t:0, speed:.0055+Math.random()*.004, fraud, end});
+}
+
+/* ---- الشظايا ---- */
+const PMAX = 180;
+const ppos = new Float32Array(PMAX*3).fill(9999);
+const pvel = Array.from({length:PMAX}, ()=>new THREE.Vector3());
+const plife = new Float32Array(PMAX);
+const pgeo = new THREE.BufferGeometry();
+pgeo.setAttribute('position', new THREE.BufferAttribute(ppos,3));
+const particles = new THREE.Points(pgeo, new THREE.PointsMaterial({color:0xff6b64, size:.085,
+  transparent:true, opacity:.95, blending:THREE.AdditiveBlending, depthWrite:false}));
+scene.add(particles);
+let pcur = 0;
+function burst(p, n=32){
+  for(let i=0;i<n;i++){
+    const idx = (pcur++) % PMAX;
+    ppos[idx*3]=p.x; ppos[idx*3+1]=p.y; ppos[idx*3+2]=p.z;
+    pvel[idx].randomDirection().multiplyScalar(.9+Math.random()*1.6);
+    plife[idx]=1;
+  }
+}
+
+/* ================= مواضع السكرول ================= */
+const KF = [
+  {p:0.00, x:-1.9, y:-.1, ry:-.55, cz:6.8, sh:.13},
+  {p:0.16, x: 2.1, y: 0,  ry: .55, cz:7.5, sh:.13},
+  {p:0.33, x:-2.1, y: 0,  ry: .10, cz:6.6, sh:.10},
+  {p:0.50, x: 2.2, y: .1, ry:2.90, cz:7.3, sh:.13},
+  {p:0.70, x:-2.0, y: 0,  ry:-.20, cz:6.4, sh:.36},
+  {p:0.86, x: 0,   y: 0,  ry: 0,   cz:5.9, sh:.17},
+  {p:1.00, x: 0,   y:-.1, ry: .15, cz:6.3, sh:.17}
+];
+const smooth = v => v*v*(3-2*v);
+function kf(p){
+  let a=KF[0], b=KF[KF.length-1];
+  for(let i=0;i<KF.length-1;i++) if(p>=KF[i].p && p<=KF[i+1].p){ a=KF[i]; b=KF[i+1]; break; }
+  const f = smooth(b.p===a.p ? 0 : (p-a.p)/(b.p-a.p));
+  const L = (u,v)=>u+(v-u)*f;
+  return {x:L(a.x,b.x)*XF, y:L(a.y,b.y)-(MOBILE?1.25:0), ry:L(a.ry,b.ry), cz:L(a.cz,b.cz)+(MOBILE?1.3:0), sh:L(a.sh,b.sh)};
+}
+
+/* ================= سكرول ناعم + تفاعل ================= */
+const lenis = new Lenis({duration:1.15, smoothWheel:true});
+document.querySelectorAll('a[href^="#"]').forEach(a=>{
+  a.addEventListener('click',e=>{
+    const el = document.querySelector(a.getAttribute('href'));
+    if(el){ e.preventDefault(); lenis.scrollTo(el, {offset:-70}); }
+  });
+});
+
+let mx=0,my=0, tmx=0,tmy=0, scrollP=0;
+addEventListener('mousemove',e=>{ tmx=(e.clientX/innerWidth-.5); tmy=(e.clientY/innerHeight-.5); });
+addEventListener('scroll',()=>{ const h=document.body.scrollHeight-innerHeight; scrollP=h>0?scrollY/h:0; }, {passive:true});
+
+const nav = document.getElementById('nav');
+const progress = document.getElementById('progress');
+
+const clock = new THREE.Clock();
+let spawnAcc = 1.8, frame = 0, phonePulse = 1;
+
+function animate(){
+  requestAnimationFrame(animate);
+  lenis.raf(performance.now());
+  const dt = Math.min(clock.getDelta(), .05);
+  const t = clock.getElapsedTime();
+  frame++;
+  mx += (tmx-mx)*.05; my += (tmy-my)*.05;
+
+  nav.classList.toggle('solid', scrollY > 40);
+  progress.style.width = (scrollP*100)+'%';
+
+  const k = kf(scrollP);
+  rig.position.x = k.x;
+  rig.position.y = k.y + Math.sin(t*1.2)*.06;
+  phone.rotation.y = k.ry + Math.sin(t*.7)*.05 + mx*.35;
+  phone.rotation.x = Math.sin(t*.9)*.03 - my*.25;
+  phonePulse += (1-phonePulse)*.08;
+  phone.scale.setScalar(phonePulse * (MOBILE ? .85 : 1));
+
+  camera.position.set(mx*.4, -my*.3, k.cz);
+  camera.lookAt(rig.position.x*.55, rig.position.y*.4, 0);
+  greenLight.position.set(rig.position.x, rig.position.y, 2.4);
+
+  shieldFlash = Math.max(0, shieldFlash - dt*1.8);
+  shieldWire.material.opacity = k.sh + shieldFlash*.5;
+  shieldWire.material.color.lerp(GREEN, .06);
+  shieldSkin.material.opacity = .026 + shieldFlash*.06;
+  shieldWire.rotation.y = t*.12; shieldWire.rotation.x = t*.07;
+  orbit.rotation.z = t*.18;
+  const oa = t*.9;
+  orbitDot.position.set(Math.cos(oa)*3.0, Math.sin(oa)*3.0*Math.cos(Math.PI/2.4)*-1*.42, Math.sin(oa)*3.0*.9).applyAxisAngle(new THREE.Vector3(1,0,0), Math.PI/2.4-Math.PI/2);
+  glowMat.color.lerp(GREEN, .05);
+  glowMat.opacity = .28 + shieldFlash*.35 + Math.sin(t*1.6)*.04;
+
+  net.rotation.y = t*.02;
+
+  spawnAcc += dt;
+  if(spawnAcc > (MOBILE?3.4:2.3) && calls.length < MAXC){
+    spawnAcc = 0;
+    spawnCall(Math.random() < .28);
+  }
+  for(let i=calls.length-1;i>=0;i--){
+    const cl = calls[i];
+    cl.t += cl.speed * (dt*60);
+    if(cl.t >= 1){
+      scene.remove(cl.line, cl.head);
+      cl.line.geometry.dispose(); cl.line.material.dispose();
+      cl.head.geometry.dispose(); cl.head.material.dispose();
+      calls.splice(i,1);
+      if(cl.fraud){
+        burst(cl.end);
+        shieldFlash = 1; shieldWire.material.color.copy(RED);
+        glowMat.color.copy(RED);
+        setScreen('blocked', 2600);
+      } else {
+        phonePulse = 1.06; shieldFlash = .45;
+        setScreen('incoming', 3400);
+      }
+      continue;
+    }
+    cl.line.geometry.setDrawRange(0, Math.floor(cl.t*64));
+    cl.head.position.copy(cl.curve.getPoint(cl.t));
+    cl.head.material.opacity = .5 + Math.sin(cl.t*Math.PI)*.5;
+  }
+  let pdirty = false;
+  for(let i=0;i<PMAX;i++){
+    if(plife[i] > 0){
+      plife[i] -= dt*1.5;
+      ppos[i*3]   += pvel[i].x*dt; ppos[i*3+1] += pvel[i].y*dt; ppos[i*3+2] += pvel[i].z*dt;
+      pvel[i].multiplyScalar(.95);
+      if(plife[i] <= 0){ ppos[i*3]=9999; }
+      pdirty = true;
+    }
+  }
+  if(pdirty) pgeo.attributes.position.needsUpdate = true;
+
+  if(scrState !== 'idle' && performance.now() > scrUntil) scrState = 'idle';
+  if(frame % 2 === 0) drawScreen(t);
+
+  composer.render();
+}
+function resize(){
+  camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);
+  composer.setSize(innerWidth,innerHeight);
+}
+addEventListener('resize',resize); resize(); animate();
+
+/* ================= واجهة: ظهور + عدّادات + إمالة + شريط الجهات ================= */
+const io = new IntersectionObserver(es=>{ es.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} }); },{threshold:.15});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+const countIO = new IntersectionObserver(es=>{ es.forEach(e=>{ if(e.isIntersecting){ animateCount(e.target); countIO.unobserve(e.target);} }); },{threshold:.6});
+document.querySelectorAll('[data-count]').forEach(el=>countIO.observe(el));
+function animateCount(el){
+  const target=+el.dataset.count, dur=1400, t0=performance.now();
+  function tick(now){ const p=Math.min((now-t0)/dur,1); const e=1-Math.pow(1-p,3);
+    el.textContent=Math.round(target*e); if(p<1)requestAnimationFrame(tick); }
+  requestAnimationFrame(tick);
+}
+
+// إمالة البطاقات مع الماوس
+if(matchMedia('(pointer:fine)').matches){
+  document.querySelectorAll('.tilt').forEach(card=>{
+    card.addEventListener('pointermove',e=>{
+      const r=card.getBoundingClientRect();
+      const px=(e.clientX-r.left)/r.width-.5, py=(e.clientY-r.top)/r.height-.5;
+      card.style.transform=`perspective(900px) rotateY(${px*7}deg) rotateX(${-py*7}deg) translateY(-3px)`;
+    });
+    card.addEventListener('pointerleave',()=>{ card.style.transform=''; });
+  });
+}
+
+// شريط الجهات المتحرك
+const MITEMS = [
+  ['أبشر — وزارة الداخلية','920020405'],['بنك الإنماء','920028000'],['مصرف الراجحي','8001244455'],
+  ['نفاذ — SDAIA','920002005'],['ناجز — وزارة العدل','920000177'],['المرور','920000090'],
+  ['شرطة الطوارئ','999'],['الهلال الأحمر','997'],['زاتكا','920001177'],['المنصة الوطنية GOV.SA','920000000']
+];
+const half = MITEMS.map(([n,x])=>`<span class="mitem"><span class="mk">✓</span>${n}<span class="mn">${x}</span></span>`).join('');
+document.getElementById('mtrack').innerHTML = half + half;
+
+// مقبض اختبار داخلي
+window.__r3d = {spawnCall, setScreen, calls, get state(){return scrState}};
+</script>
+</body>
+</html>
